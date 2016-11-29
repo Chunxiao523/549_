@@ -11,6 +11,7 @@ import com.calebdevelops.rawfinally.R;
 import com.google.vrtoolkit.cardboard.HeadTransform;
 import com.google.vrtoolkit.cardboard.sensors.HeadTracker;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -47,7 +48,9 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 	private static final float[] POS_MATRIX_MULTIPLY_VEC = {0, 0, 0, 1.0f};
 	private static final float YAW_LIMIT = 0.12f;
 	private static final float PITCH_LIMIT = 0.12f;
-	Object3D spaceship;
+	private Object3D  currentObj;
+	private int count = 0;
+	private int score = 0;
 	public RajawaliVRExampleRenderer(Context context) {
 		super(context);
 		this.mHeadTracker = super.mHeadTracker;
@@ -60,13 +63,26 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
     public void onDrawFrame(GL10 glUnused) {
         super.onDrawFrame(glUnused);
 		mHeadTransform.getHeadView(headView, 0);
-        if (isLookingAtObj(spaceship)){
-			Log.v("debug", "message............");
-        }
+        if (isLookingAtObj(currentObj)){
+			count ++;
+			Log.v("is at center: ", Integer.toString(count));
+			if (count >= 150) {
+				getCurrentScene().removeChild(currentObj);
+				setScore(10);
+				Log.v("Object is removed: ", Integer.toString(count));
+				setObject();
+				setAnim();
+				count = 0;
+				Log.v("new object is added: ", Integer.toString(count));
+			}
+        } else {
+			count = 0;
+		}
     }
 
 	@Override
 	public void initScene() {
+
 		DirectionalLight light = new DirectionalLight(0.2f, -1f, 0f);
 		light.setPower(.7f);
 		getCurrentScene().addLight(light);
@@ -83,64 +99,11 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 
 		try {
 			getCurrentScene().setSkybox(R.drawable.posx, R.drawable.negx, R.drawable.posy, R.drawable.negy, R.drawable.posz, R.drawable.negz);
-			LoaderOBJ loaderobj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.hellfire_obj);
-
-			loaderobj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.spaceship_obj);
-			loaderobj.parse();
-			spaceship = loaderobj.getParsedObject();
-			spaceship.setY(-2);//height
-			spaceship.setX(1);//right is positive, left is negative
-			spaceship.setRotY(90);
-			spaceship.setZ(-3);//front is negative   back is positive
-			spaceship.setScale(0.2);
-
-			getCurrentScene().addChild(spaceship);
-
-			loaderobj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.ewing_obj);
-			loaderobj.parse();
-			Object3D ewing = loaderobj.getParsedObject();
-            ewing.getLookAt();
-			ewing.setY(2);
-			ewing.setX(0.5);
-			ewing.setRotY(90);
-			ewing.setZ(-5);
-			ewing.setScale(0.3);
-		//	getCurrentScene().addChild(ewing);
-
-
+			setObject();
+			setAnim();
 			//X: right
 			//Y: height
 			//Z: back
-
-
-			CatmullRomCurve3D path1 = new CatmullRomCurve3D();
-			path1.addPoint(new Vector3(0, -5, -10));//points that object will go through
-			path1.addPoint(new Vector3(10, -5, 0));
-			path1.addPoint(new Vector3(0, -4, 8));
-			path1.addPoint(new Vector3(-16, -6, 0));
-			path1.isClosedCurve(true);
-
-			CatmullRomCurve3D path2 = new CatmullRomCurve3D();
-			path2.addPoint(new Vector3(-10, 2, -30));//points that object will go through
-			path2.addPoint(new Vector3(-10, 0, -20));
-			path2.addPoint(new Vector3(-10, -2, -0));
-			path2.addPoint(new Vector3(5, -2, 20));
-			path2.addPoint(new Vector3(10, 0, 0));
-			path2.addPoint(new Vector3(10, -2, -10));
-			path2.addPoint(new Vector3(10, -5, -30));
-			path2.isClosedCurve(true);
-			SplineTranslateAnimation3D anim2 = new SplineTranslateAnimation3D(path2);
-			anim2.setDurationMilliseconds(88000);
-			anim2.setRepeatMode(Animation.RepeatMode.INFINITE);
-
-
-			SplineTranslateAnimation3D anim=anim2;
-			// -- orient to path
-			anim.setOrientToPath(true);
-			anim.setTransformable3D(spaceship);
-			getCurrentScene().registerAnimation(anim);
-			anim.play();
-			//getCurrentScene().removeChild(ewing);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -196,7 +159,49 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 
 		return object;
 	}
-
+	private void setAnim() {
+		int index =(int) ((Math.random()) * 4);
+		CatmullRomCurve3D path = choosepath(index);
+		SplineTranslateAnimation3D anim = new SplineTranslateAnimation3D(path);
+		anim.setDurationMilliseconds(88000);
+		anim.setRepeatMode(Animation.RepeatMode.INFINITE);
+		// -- orient to path
+		anim.setOrientToPath(true);
+		anim.setTransformable3D(currentObj);
+		getCurrentScene().registerAnimation(anim);
+		anim.play();
+	}
+	public void setObject() {
+		int index =(int) ((Math.random()) * 4);
+		Log.v("new object added,index ", Integer.toString(index));
+		LoaderOBJ loaderobj;
+		switch (index) {
+			case 0:
+				loaderobj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.hellfire_obj);
+				break;
+			case 1:
+				loaderobj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.spaceship_obj);
+				break;
+			case 2:
+				loaderobj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.ewing_obj);
+				break;
+			default:
+				loaderobj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.spaceship_obj);
+				break;
+		}
+		try {
+			loaderobj.parse();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		currentObj = loaderobj.getParsedObject();
+		currentObj.setY(-2);//height
+		currentObj.setX(1);//right is positive, left is negative
+		currentObj.setRotY(90);
+		currentObj.setZ(-3);//front is negative   back is positive
+		currentObj.setScale(0.2);
+		getCurrentScene().addChild(currentObj);
+	}
 	public CatmullRomCurve3D choosepath(int n){
 		CatmullRomCurve3D path = new CatmullRomCurve3D();
 		switch (n){
@@ -324,8 +329,12 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 		float yaw = (float) Math.atan2(tempPosition[0], -tempPosition[2]);
 		Boolean bool = Math.abs(pitch) < PITCH_LIMIT && Math.abs(yaw) < YAW_LIMIT;
 		String result = Boolean.toString(bool);
-		Log.v("At center? ", result);
     	return bool;
 	}
-
+	public void setScore(int plus) {
+		score += plus;
+	}
+	public String getScore() {
+		return Integer.toString(score);
+	}
 }
