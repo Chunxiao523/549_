@@ -3,16 +3,15 @@ package com.calebdevelops.rajawalivrcardboard;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.opengl.Matrix;
 import android.util.Log;
 
 import com.calebdevelops.rawfinally.R;
 import com.google.vrtoolkit.cardboard.HeadTransform;
 import com.google.vrtoolkit.cardboard.sensors.HeadTracker;
-
-import java.lang.reflect.Array;
-import java.util.Arrays;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -27,10 +26,10 @@ import rajawali.materials.textures.ATexture.TextureException;
 import rajawali.materials.textures.NormalMapTexture;
 import rajawali.materials.textures.Texture;
 import rajawali.math.Matrix4;
-import rajawali.math.Quaternion;
 import rajawali.math.vector.Vector3;
 import rajawali.parser.LoaderAWD;
 import rajawali.parser.LoaderOBJ;
+import rajawali.renderer.RajawaliSideBySideRenderer;
 import rajawali.terrain.SquareTerrain;
 import rajawali.terrain.TerrainGenerator;
 
@@ -46,11 +45,14 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 	private float[] tempPosition = new float[16];
 	private float[] headView = new float[16];
 	private static final float[] POS_MATRIX_MULTIPLY_VEC = {0, 0, 0, 1.0f};
-	private static final float YAW_LIMIT = 0.12f;
-	private static final float PITCH_LIMIT = 0.12f;
+	private static final float YAW_LIMIT = 0.2f;
+	private static final float PITCH_LIMIT = 0.2f;
 	private Object3D  currentObj;
 	private int count = 0;
 	private int score = 0;
+	LoaderOBJ hellfireobj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.hellfire_obj);
+	LoaderOBJ spaceshipobj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.spaceship_obj);
+	LoaderOBJ ewingobj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.ewing_obj);
 	public RajawaliVRExampleRenderer(Context context) {
 		super(context);
 		this.mHeadTracker = super.mHeadTracker;
@@ -60,13 +62,13 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 		//this.mCameraOrientation = new Quaternion();
 	}
 
-    public void onDrawFrame(GL10 glUnused) {
-        super.onDrawFrame(glUnused);
+	public void onDrawFrame(GL10 glUnused) {
+		super.onDrawFrame(glUnused);
 		mHeadTransform.getHeadView(headView, 0);
-        if (isLookingAtObj(currentObj)){
+		if (isLookingAtObj(currentObj)){
 			count ++;
 			Log.v("is at center: ", Integer.toString(count));
-			if (count >= 150) {
+			if (count >= 100) {
 				getCurrentScene().removeChild(currentObj);
 				setScore(10);
 				Log.v("Object is removed: ", Integer.toString(count));
@@ -75,14 +77,20 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 				count = 0;
 				Log.v("new object is added: ", Integer.toString(count));
 			}
-        } else {
+		} else {
 			count = 0;
 		}
-    }
+	}
 
 	@Override
 	public void initScene() {
-
+		try {
+			hellfireobj.parse();
+			spaceshipobj.parse();
+			ewingobj.parse();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 		DirectionalLight light = new DirectionalLight(0.2f, -1f, 0f);
 		light.setPower(.7f);
 		getCurrentScene().addLight(light);
@@ -101,6 +109,9 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 			getCurrentScene().setSkybox(R.drawable.posx, R.drawable.negx, R.drawable.posy, R.drawable.negy, R.drawable.posz, R.drawable.negz);
 			setObject();
 			setAnim();
+
+		//Canvas map = textAsBitmap("hello");
+		//	getCurrentScene().addChild((Canvas)map);
 			//X: right
 			//Y: height
 			//Z: back
@@ -109,6 +120,21 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 		}
 
 		super.initScene();
+	}
+
+	public Canvas textAsBitmap(String text) {// For later usage
+		Paint paint = new Paint();
+		paint.setTextSize(16);
+		paint.setColor(0x666666);
+		paint.setUnderlineText(true);
+		paint.setTextAlign(Paint.Align.CENTER);
+		int width = (int) (paint.measureText(text) + 0.5f); // round
+		float baseline = (int) (paint.ascent() + 0.5f);
+		int height = (int) (baseline + paint.descent() + 0.5f);
+		Bitmap image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+		Canvas canvas = new Canvas(image);
+		canvas.drawText(text, 0, baseline, paint);
+		return canvas;
 	}
 
 	public Object3D createObject(int n, Object3D object) throws TextureException {
@@ -160,12 +186,10 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 		return object;
 	}
 	private void setAnim() {
-		int index =(int) ((Math.random()) * 4);
-		CatmullRomCurve3D path = choosepath(index);
+		CatmullRomCurve3D path = choosepath();
 		SplineTranslateAnimation3D anim = new SplineTranslateAnimation3D(path);
 		anim.setDurationMilliseconds(88000);
 		anim.setRepeatMode(Animation.RepeatMode.INFINITE);
-		// -- orient to path
 		anim.setOrientToPath(true);
 		anim.setTransformable3D(currentObj);
 		getCurrentScene().registerAnimation(anim);
@@ -177,22 +201,17 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 		LoaderOBJ loaderobj;
 		switch (index) {
 			case 0:
-				loaderobj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.hellfire_obj);
+				loaderobj = spaceshipobj;
 				break;
 			case 1:
-				loaderobj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.spaceship_obj);
+				loaderobj = ewingobj;
 				break;
 			case 2:
-				loaderobj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.ewing_obj);
+				loaderobj = hellfireobj;
 				break;
 			default:
-				loaderobj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.spaceship_obj);
+				loaderobj = spaceshipobj;
 				break;
-		}
-		try {
-			loaderobj.parse();
-		} catch(Exception e) {
-			e.printStackTrace();
 		}
 		currentObj = loaderobj.getParsedObject();
 		currentObj.setY(-2);//height
@@ -201,18 +220,18 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 		currentObj.setZ(-3);//front is negative   back is positive
 		currentObj.setScale(0.2);
 		getCurrentScene().addChild(currentObj);
-	}
-	public CatmullRomCurve3D choosepath(int n){
+	}	public CatmullRomCurve3D choosepath(){
+		int n =(int) ((Math.random()) * 4);
 		CatmullRomCurve3D path = new CatmullRomCurve3D();
 		switch (n){
-			case 1:{
+			case 0:{
 				path.addPoint(new Vector3(0, -5, -10));//points that object will go through
 				path.addPoint(new Vector3(10, -5, 0));
 				path.addPoint(new Vector3(0, -4, 8));
 				path.addPoint(new Vector3(-16, -6, 0));
 				break;
 			}
-			case 2:{
+			case 1:{
 				path.addPoint(new Vector3(-10, 2, -30));//points that object will go through
 				path.addPoint(new Vector3(-10, 0, -20));
 				path.addPoint(new Vector3(-10, -2, -0));
@@ -222,7 +241,7 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 				path.addPoint(new Vector3(10, -5, -30));
 				break;
 			}
-			case 3:{
+			case 2:{
 				path.addPoint(new Vector3(-30, 2, 10));//points that object will go through
 				path.addPoint(new Vector3(-20, 0, 10));
 				path.addPoint(new Vector3(0, -2, 10));
@@ -323,18 +342,20 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 
 	private boolean isLookingAtObj(Object3D object3D) {
 
-	//	Matrix.multiplyMM(modelView, 0, headView, 0, object3D.getScenePosition(), 0);
+		//	Matrix.multiplyMM(modelView, 0, headView, 0, object3D.getScenePosition(), 0);
 		Matrix.multiplyMV(tempPosition, 0, object3D.getModelViewMatrix().getFloatValues(), 0, POS_MATRIX_MULTIPLY_VEC, 0);
-        float pitch = (float) Math.atan2(tempPosition[1], -tempPosition[2]);
+		float pitch = (float) Math.atan2(tempPosition[1], -tempPosition[2]);
 		float yaw = (float) Math.atan2(tempPosition[0], -tempPosition[2]);
 		Boolean bool = Math.abs(pitch) < PITCH_LIMIT && Math.abs(yaw) < YAW_LIMIT;
 		String result = Boolean.toString(bool);
-    	return bool;
+		return bool;
 	}
 	public void setScore(int plus) {
 		score += plus;
 	}
-	public String getScore() {
-		return Integer.toString(score);
+
+	public Integer getScore() {
+		return score;
 	}
 }
+
