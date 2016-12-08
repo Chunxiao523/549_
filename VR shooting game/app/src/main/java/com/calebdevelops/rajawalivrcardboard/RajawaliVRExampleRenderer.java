@@ -70,12 +70,13 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 			Log.v("is at center: ", Integer.toString(count));
 			if (count >= 100) {
 				getCurrentScene().removeChild(currentObj);
-				setScore(10);
-				Log.v("Object is removed: ", Integer.toString(count));
-				setObject();
-				setAnim();
-				count = 0;
-				Log.v("new object is added: ", Integer.toString(count));
+						Log.v("remove successed", ":");
+				//currentObj.destroy();
+				//Object3D  currentObj;
+						setScore(10);
+						setObject();
+						setAnim();
+						count = 0;
 			}
 		} else {
 			count = 0;
@@ -109,9 +110,6 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 			getCurrentScene().setSkybox(R.drawable.posx, R.drawable.negx, R.drawable.posy, R.drawable.negy, R.drawable.posz, R.drawable.negz);
 			setObject();
 			setAnim();
-
-		//Canvas map = textAsBitmap("hello");
-		//	getCurrentScene().addChild((Canvas)map);
 			//X: right
 			//Y: height
 			//Z: back
@@ -120,70 +118,6 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 		}
 
 		super.initScene();
-	}
-
-	public Canvas textAsBitmap(String text) {// For later usage
-		Paint paint = new Paint();
-		paint.setTextSize(16);
-		paint.setColor(0x666666);
-		paint.setUnderlineText(true);
-		paint.setTextAlign(Paint.Align.CENTER);
-		int width = (int) (paint.measureText(text) + 0.5f); // round
-		float baseline = (int) (paint.ascent() + 0.5f);
-		int height = (int) (baseline + paint.descent() + 0.5f);
-		Bitmap image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-		Canvas canvas = new Canvas(image);
-		canvas.drawText(text, 0, baseline, paint);
-		return canvas;
-	}
-
-	public Object3D createObject(int n, Object3D object) throws TextureException {
-		try {
-			LoaderOBJ obj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.spaceship_obj);
-			LoaderAWD awd = new LoaderAWD(mContext.getResources(), mTextureManager, R.raw.dark_fighter);
-			obj.parse();
-			awd.parse();
-			object = obj.getParsedObject();
-			switch (n){//awd: dark_fighter space_cruiser capital
-				//obj: hellfire ewing spaceship
-				case 1:{
-					obj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.hellfire_obj);
-					break;
-				}
-				case 2:{
-					obj = new LoaderOBJ(mContext.getResources(), mTextureManager, R.raw.ewing_obj);
-				}
-				case 3:{
-					awd= new LoaderAWD(mContext.getResources(), mTextureManager, R.raw.dark_fighter);
-					Material darkFighterMaterial = new Material();
-					darkFighterMaterial.setDiffuseMethod(new DiffuseMethod.Lambert());
-					darkFighterMaterial.setColorInfluence(0);
-					darkFighterMaterial.enableLighting(true);
-					darkFighterMaterial.addTexture(new Texture("darkFighterTex", R.drawable.dark_fighter_6_color));
-					object = awd.getParsedObject();
-					object.setMaterial(darkFighterMaterial);
-					break;
-				}
-				case 4:{
-					awd= new LoaderAWD(mContext.getResources(), mTextureManager, R.raw.space_cruiser);
-					awd.parse();
-					Material cruiserMaterial = new Material();
-					cruiserMaterial.setDiffuseMethod(new DiffuseMethod.Lambert());
-					cruiserMaterial.setColorInfluence(0);
-					cruiserMaterial.enableLighting(true);
-					cruiserMaterial.addTexture(new Texture("spaceCruiserTex", R.drawable.space_cruiser_4_color_1));
-					object = awd.getParsedObject();
-					object.setMaterial(cruiserMaterial);
-					break;
-				}
-				default: break;
-			}
-			return object;
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
-
-		return object;
 	}
 	private void setAnim() {
 		CatmullRomCurve3D path = choosepath();
@@ -199,28 +133,65 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 		int index =(int) ((Math.random()) * 4);
 		Log.v("new object added,index ", Integer.toString(index));
 		LoaderOBJ loaderobj;
-		switch (index) {
-			case 0:
-				loaderobj = spaceshipobj;
-				break;
-			case 1:
-				loaderobj = ewingobj;
-				break;
-			case 2:
-				loaderobj = hellfireobj;
-				break;
-			default:
-				loaderobj = spaceshipobj;
-				break;
+		LoaderAWD awd;
+		currentObj = spaceshipobj.getParsedObject();
+
+		try{
+			switch (index) {
+
+				case 0:
+					loaderobj = spaceshipobj;
+					currentObj = loaderobj.getParsedObject();
+					currentObj.setScale(0.3);
+					break;
+				case 1:
+					loaderobj = hellfireobj;
+					currentObj = loaderobj.getParsedObject();
+					currentObj.setScale(0.3);
+					//loaderobj = ewingobj;
+					break;
+				case 2:
+					awd= new LoaderAWD(mContext.getResources(), mTextureManager, R.raw.capital);
+					awd.parse();
+					Material capitalMaterial = new Material();
+					capitalMaterial.setDiffuseMethod(new DiffuseMethod.Lambert());
+					capitalMaterial.setColorInfluence(0);
+					capitalMaterial.enableLighting(true);
+					capitalMaterial.addTexture(new Texture("capitalTex", R.drawable.hullw));
+					capitalMaterial.addTexture(new NormalMapTexture("capitalNormTex", R.drawable.hulln));
+					currentObj = awd.getParsedObject();
+					currentObj.setMaterial(capitalMaterial);
+					break;
+				case 3:
+					awd= new LoaderAWD(mContext.getResources(), mTextureManager, R.raw.dark_fighter);
+					awd.parse();
+					Material darkFighterMaterial = new Material();
+					darkFighterMaterial.setDiffuseMethod(new DiffuseMethod.Lambert());
+					darkFighterMaterial.setColorInfluence(0);
+					darkFighterMaterial.enableLighting(true);
+					darkFighterMaterial.addTexture(new Texture("darkFighterTex", R.drawable.dark_fighter_6_color));
+
+					currentObj = awd.getParsedObject();
+					currentObj.setMaterial(darkFighterMaterial);
+					break;
+				default:
+					loaderobj = spaceshipobj;
+					currentObj = loaderobj.getParsedObject();
+					break;
+			}
+
+		}catch(Exception e){
+
 		}
-		currentObj = loaderobj.getParsedObject();
-		currentObj.setY(-2);//height
-		currentObj.setX(1);//right is positive, left is negative
-		currentObj.setRotY(90);
-		currentObj.setZ(-3);//front is negative   back is positive
-		currentObj.setScale(0.2);
+
+		//currentObj.setY(-2);//height
+		//currentObj.setX(1);//right is positive, left is negative
+		//currentObj.setRotY(90);
+		//currentObj.setZ(-3);//front is negative   back is positive
+		//currentObj.setScale(0.3);
 		getCurrentScene().addChild(currentObj);
-	}	public CatmullRomCurve3D choosepath(){
+	}
+	private CatmullRomCurve3D choosepath(){
 		int n =(int) ((Math.random()) * 4);
 		CatmullRomCurve3D path = new CatmullRomCurve3D();
 		switch (n){
@@ -338,7 +309,6 @@ public class RajawaliVRExampleRenderer extends RajawaliVRRenderer {
 
 		getCurrentScene().addChild(mTerrain);
 	}
-
 
 	private boolean isLookingAtObj(Object3D object3D) {
 

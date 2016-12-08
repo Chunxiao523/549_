@@ -42,15 +42,15 @@ public class RajawaliVRExampleActivity extends RajawaliVRActivity {
 
 
 		final TextView focus = new TextView(this);
-		focus.setText("\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t" + "+" + "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"+ "+");
-		focus.setTextSize(110);
+		focus.setText("\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t" + "+" + "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"+ "+");
+		focus.setTextSize(55);
 		ll.addView(focus);
 		mLayout.addView(ll);
 
 
 
 		final TextView win = new TextView(this);
-		win.setText("\n\n\t\t\t\t\t Victory!\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tVictory!" );
+		win.setText("\n\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t Victory!\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tVictory!" );
 		win.setTextSize(50);
 		win.setTextColor(Color.rgb(255, 128, 0));
 		final Integer count=0;
@@ -65,7 +65,7 @@ public class RajawaliVRExampleActivity extends RajawaliVRActivity {
 							@Override
 							public void run() {
 								// update TextView here!
-								score.setText("\t\t\t" + mRenderer.getScore() + "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t" + mRenderer.getScore());
+								score.setText("\t\t\t" + mRenderer.getScore() + "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t" + mRenderer.getScore());
 								if(mRenderer.getScore()==50){
 									ll.removeAllViews();
 									ll.addView(win);
